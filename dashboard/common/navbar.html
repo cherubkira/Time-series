@@ -1,0 +1,58 @@
+{% load static %}
+<head>
+ {% comment %} <style>
+    .dropdown:hover>.dropdown-menu {
+        display: block;
+      }
+    
+</style>  {% endcomment %}
+</head>
+<!-- Navbar Start -->
+<nav class="mb-0 main-header navbar navbar-expand-lg navbar-white navbar-light">
+    <!-- Navbar links -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                    <i class="fas fa-bars"></i>
+                </a>
+            </li>
+            <!-- <li class="nav-item">
+                <a href="" class="nav-link"><i class="bi bi-house-down "></i></a>
+            </li>
+            <li class="nav-item">
+                <a href="" target="_blank" class="nav-link"><i class="bi bi-binoculars-fill"></i> View Site</a>
+            </li> -->
+        </ul>
+        <!-- Right-aligned links -->
+        <ul class="navbar-nav mb-2 mb-lg-0">
+            <!-- Notification -->
+            <!-- Profile -->
+             <form class="d-flex col-8 mx-auto">
+            <input class="form-control p-4 me-2" name="q" type="text" placeholder="Search" >
+            <button class="btn btn-primary"> <i class="fas fa-search ms-2"></i></button>
+          </form>
+            <li class="nav-item dropdown pb-2">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                    aria-expanded="true">
+                        
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="#"><i
+                                class="fas fa-sliders-h fa-fw"></i> My Profile</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog fa-fw"></i>
+                            Password</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li></li>
+                </ul>
+            </li>
+
+            <!-- Full Screen -->
+        </ul>
+  
+</nav>
+<!-- Navbar End -->

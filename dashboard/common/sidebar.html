@@ -1,0 +1,172 @@
+{% load static %}
+<link
+href="  https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+rel="stylesheet"
+/>
+<style>
+  .brand-link {
+      max-width: 100%; /* Limit the maximum width */
+      overflow: hidden; /* Hide any content that exceeds the width */
+  }
+  
+  </style>
+<!--Side NavBar Start-->
+
+ <aside class="main-sidebar sidebar-dark-primary elevation-4 ">
+  <a href="" class="brand-link pt-3 mt-3">
+    <img
+      src="{% static  'assets/image/EPCD-Logo-Final-White-NoBg-Hi-res.png' %}"
+      alt="AdminLTE Logo"
+      class="brand-image img-circle elevation-3"
+    />
+    <span class="brand-text active font-weight-light mb-2">Time Series Data</span>
+  </a> 
+
+  <div class="sidebar">
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex justify-content-center">
+      <div class="info">           
+       <div class="text-center">
+       <a href="#">
+         <img class="img-circle  img-fluid  " width="4.1rem"  src="{% static 'assets/image/EPCD-Logo-Final-White-NoBg-Hi-res.png'%}"  alt="Profile Picture">
+         <div class="row justify-content-center text-white text-center m-0 p-0">
+          <div class="col-12">
+            <p class=" p-0 m-0 ">Welcome</p>
+          </div>
+          <div class="col-12">
+           
+          </div>
+         </div>
+        </a>
+       </div>                
+        
+      </div>
+    </div>
+
+    <nav class="mt-2">
+      <ul
+        class="nav nav-pills nav-sidebar flex-column"
+        data-widget="treeview"
+        role="menu"
+        data-accordion="false"
+      >
+        <li class="nav-item">
+          <a href="{% url "index"  %}" class="nav-link {% if request.path == '/user-admin/' %}active{% endif %}">
+            <i class="nav-icon bi bi-speedometer2"></i>
+            <p>Dashboard</p>
+          </a>
+        </li>
+        
+      
+      <li class="nav-item  
+        
+        {% if request.path == '/user-admin/data-list/' %}active menu-open{% endif %} 
+        {% if request.path == '/user-admin/topic/' %}active menu-open{% endif %}
+        {% if request.path == '/user-admin/category/' %}active menu-open{% endif %}
+        {% if request.path == '/user-admin/indicators/' %}active menu-open{% endif %}
+        {% if request.path == '/user-admin/measurement/' %}active menu-open{% endif %}
+        {% if request.path == '/user-admin/source/' %}active menu-open{% endif %}
+        ">
+          <a href="#" class="nav-link 
+          {% if request.path == '/user-admin/data-list/' %}active{% endif %} 
+          {% if request.path == '/user-admin/topic/' %}active{% endif %}
+          {% if request.path == '/user-admin/category/' %}active{% endif %}
+          {% if request.path == '/user-admin/indicators/' %}active{% endif %}
+          {% if request.path == '/user-admin/measurement/' %}active{% endif %}
+          {% if request.path == '/user-admin/source/' %}active{% endif %}
+
+          ">
+            {% comment %} <i class="nav-icon fas fa-database"></i> {% endcomment %}
+            <i class="nav-icon bi bi-database-fill-gear"></i>
+            <p>
+              Data
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview ms-1">
+
+            <li class="nav-item">
+             <i class="bi bi-clipboard-data ml-1"></i>
+                <p>Data View</p>
+              </a>
+            </li>
+
+            <li class="nav-item">
+               <i class="bi bi-person-video3 ml-1"></i>
+                <p>Topic</p>
+              </a>
+            </li>
+
+            <li class="nav-item ">
+                <i class="bi bi-list-nested ml-1"></i>
+                <p>Categories</p>
+              </a>
+            </li>
+
+            <li class="nav-item">
+               <i class="bi bi-app-indicator ml-1"></i>
+                <p>All Indicators</p>
+              </a>
+            </li>
+
+            <li class="nav-item">
+                <i class="bi bi-calendar-date ml-1"></i>
+                <p>Years</p>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              
+                <i class="bi bi-book ml-1"></i>
+                <p>Document</p>
+              </a>
+            </li>
+
+          </ul>
+        </li>
+        </li>
+        <li class="nav-item ">
+          
+            <i class="nav-icon fas fa-users"></i>
+            <p>User Lists</p>
+          </a>
+        </li>
+       
+        {% comment %} <li class="nav-item">
+     
+           <i class="bi bi-recycle"></i> 
+          
+            <p>Trash (Recyclebin)</p>
+          </a>
+        </li> {% endcomment %}
+
+
+        <li class="nav-item">
+        
+           <i class="nav-icon bi bi-credit-card-2-back-fill"></i> 
+          
+            <p >Customize Dashboard</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <i class="nav-icon bi bi-award-fill"></i>
+          
+            <p >Custom Dashboard Lists</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+
+          <i class="nav-icon bi bi-folder-fill"></i>
+          
+            <p >Projects and Initiatives</p>
+          </a>
+        </li>
+          </ul>
+        </li>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</aside>
+<!--Side Navbar End-->
