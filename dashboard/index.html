@@ -47,11 +47,11 @@
         <div class="loader-fill"></div>
       </div>
     </div>
-    <nav class="pc-sidebar dark-blue-transparent" aria-label="Main Navigation">
+    <nav class="pc-sidebar" aria-label="Main Navigation">
       <div class="navbar-wrapper">
         <div class="m-header">
           <a href="#" class="d-flex align-items-center">
-            <h5 class="ms-2 mb-0 text-white fw-bold">DPMs Dashboard</h5>
+            <h5 class="ms-2 mb-0 text-black fw-bold">DPMs Dashboard</h5>
           </a>
         </div>
         <div class="navbar-content">
@@ -65,7 +65,7 @@
                 <span class="pc-micon"
                   ><i class="ti ti-dashboard text-info"></i
                 ></span>
-                <span class="pc-mtext text-white" data-i18n="Dashboard"
+                <span class="pc-mtext text-black" data-i18n="Dashboard"
                   >Dashboard</span
                 >
               </a>
@@ -82,7 +82,7 @@
                 <span class="pc-micon"
                   ><i class="ti ti-list text-info"></i
                 ></span>
-                <span class="pc-mtext text-white">Topics List</span>
+                <span class="pc-mtext text-black">Topics List</span>
               </a>
             </li>
           </ul>
@@ -922,7 +922,8 @@
     <script src="{% static 'js/script.js' %}" defer></script>
     <script src="{% static 'js/theme.js' %}" defer></script>
 
-    <script src="{% static 'js/dashboard.js' %}" defer></script>
+    <script type="module" src="{% static 'js/dashboard.js' %}"></script>
+
     <script src="{% static 'js/tech-stack.js' %}" defer></script>
   </body>
 </html>
