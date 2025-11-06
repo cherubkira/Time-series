@@ -207,18 +207,6 @@ $(document).ready(function () {
             const mainIndicator = c.indicators?.[0];
             const hasAnnualData = mainIndicator?.annual_data?.length > 0;
 
-            // Compute average performance if data exists
-            let avgPerformance = "";
-            if (hasAnnualData) {
-              const total = mainIndicator.annual_data.reduce(
-                (sum, d) => sum + (d.performance ?? 0),
-                0
-              );
-              avgPerformance = Math.round(
-                total / mainIndicator.annual_data.length
-              );
-            }
-
             return `
 <div class="col-md-6 col-xl-3 mb-4">
   <div class="card shadow-sm h-100 category-card hover-card" 
@@ -230,10 +218,7 @@ $(document).ready(function () {
       c.color
     )};"></div>
     
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h5 class="text-${c.color} mb-0">${c.name_ENG}</h5>
-      <span class="badge bg-${c.color}">${c.indicators.length} Indicators</span>
-    </div>
+    <h5 class="text-${c.color} mb-2 mt-1">${c.name_ENG}</h5>
 
     ${
       hasAnnualData
@@ -242,12 +227,6 @@ $(document).ready(function () {
     }
 
     ${extraHtml}
-
-    ${
-      avgPerformance
-        ? `<p class="text-muted small mt-1">Avg: ${avgPerformance}%</p>`
-        : ""
-    }
 
     <small class="text-muted mt-auto d-block">Last updated: ${
       c.updated_at ? new Date(c.updated_at).toLocaleDateString() : "N/A"
@@ -264,7 +243,6 @@ $(document).ready(function () {
       `);
 
         // --- Initialize Sparklines ---
-
         categoriesList.forEach((c) => {
           const mainIndicator = c.indicators?.[0];
           if (mainIndicator?.annual_data?.length) {
@@ -275,28 +253,17 @@ $(document).ready(function () {
 
             new ApexCharts(document.querySelector(`#sparkline-${c.id}`), {
               series: [{ name: "Performance", data: chartData }],
-              chart: {
-                type: "bar",
-                height: 60, // increased slightly for readability
-                sparkline: { enabled: true },
-              },
-              plotOptions: {
-                bar: {
-                  horizontal: false,
-                  columnWidth: "60%", // thinner bars to fit better
-                  borderRadius: 3,
-                },
-              },
+              chart: { type: "bar", height: 50, sparkline: { enabled: true } },
+              plotOptions: { bar: { columnWidth: "70%", borderRadius: 4 } },
+              colors: [colorHex(c.color)],
               tooltip: {
-                enabled: true,
-                theme: "dark",
                 y: {
                   formatter: function (val, { dataPointIndex }) {
                     return `${val} (${years[dataPointIndex]})`;
                   },
                 },
+                theme: "dark",
               },
-              colors: [colorHex(c.color)],
             }).render();
           }
         });
