@@ -14,6 +14,7 @@ $(document).ready(function () {
     "info",
     "secondary",
   ];
+
   const colorHex = (colorName) => {
     switch (colorName) {
       case "primary":
@@ -137,6 +138,7 @@ $(document).ready(function () {
               ? `<p class="text-muted small mt-2">${c.description}</p>`
               : "";
 
+            // --- Removed green arrow ---
             return `
 <div class="col-md-6 col-xl-3 mb-4">
   <div class="card shadow-sm h-100 category-card hover-card" 
@@ -149,14 +151,8 @@ $(document).ready(function () {
     <p class="text-muted mb-2" style="font-size:0.9rem;">
       ${indicatorCount} Indicator${indicatorCount > 1 ? "s" : ""}
       ${
-        mainInd?.annual_data?.length
-          ? ` | <span class="${
-              mainInd.annual_data[0].performance >= 0
-                ? "text-success"
-                : "text-danger"
-            }">
-               ${mainInd.annual_data[0].performance >= 0 ? "▲" : "▼"}
-             </span>`
+        mainInd?.annual_data?.length && mainInd.annual_data[0].performance < 0
+          ? ` | <span class="text-danger">▼</span>`
           : ""
       }
     </p>
@@ -179,7 +175,8 @@ $(document).ready(function () {
           <div class="row gx-3 gy-4" id="category_list">${html}</div>
           <div id="annualTable" class="mt-5"></div>
         `);
-        // Initialize category sparklines
+
+        // Initialize sparklines
         categories.forEach((c) => {
           const mainInd = c.indicators?.[0];
           if (mainInd?.annual_data?.length) {
@@ -198,8 +195,8 @@ $(document).ready(function () {
               },
               plotOptions: {
                 bar: {
-                  columnWidth: "35%", // thinner bars for a cleaner look
-                  borderRadius: 4, // slightly more rounded for modern style
+                  columnWidth: "35%",
+                  borderRadius: 4,
                   colors: {
                     ranges: [
                       {
@@ -462,4 +459,38 @@ $(document).ready(function () {
       }, 100 + idx * 30);
     });
   }
+
+  // Global search filter (Topics / Categories / Indicators)
+  $(document).on("input", "#global-search", function () {
+    const q = $(this).val().toLowerCase().trim();
+
+    // if empty restore everything visible
+    if (!q) {
+      $(".topic-card, .category-card, .indicator-title")
+        .closest(".col-md-6, .col-md-4, .topic-card")
+        .show();
+      return;
+    }
+
+    // Determine current view mode
+    const isTopicView = $(".topic-card").length > 0;
+    const isCategoryView = $(".category-card").length > 0;
+    const isIndicatorView = $(".indicator-title").length > 0;
+
+    if (isTopicView) {
+      $(".topic-card").each(function () {
+        $(this).toggle($(this).text().toLowerCase().includes(q));
+      });
+    } else if (isCategoryView) {
+      $(".category-card").each(function () {
+        $(this).toggle($(this).text().toLowerCase().includes(q));
+      });
+    } else if (isIndicatorView) {
+      $(".indicator-title").each(function () {
+        $(this)
+          .closest(".col-md-4, .col-xxl-4, .col-12")
+          .toggle($(this).text().toLowerCase().includes(q));
+      });
+    }
+  });
 });
