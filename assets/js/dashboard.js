@@ -115,7 +115,7 @@ $(document).ready(function () {
       );
     },
     success: function (response) {
-      if (!Array.isArray(response.data) || response.data.length === 0) {
+      if (!response.data || response.data.length === 0) {
         $("#topic-list").html(
           "<p class='text-warning text-center'>No topics found.</p>"
         );
@@ -123,12 +123,12 @@ $(document).ready(function () {
       }
 
       const cards = response.data.map((item) => {
-        const imgBack = item.background_image
-          ? baseUrl + item.background_image
-          : "https://via.placeholder.com/600x300?text=No+Image";
-        const iconImg = item.image_icons
-          ? baseUrl + item.image_icons
-          : "https://via.placeholder.com/48?text=Icon";
+        const imgBack =
+          (item.background_image && baseUrl + item.background_image) ||
+          "https://via.placeholder.com/600x300?text=No+Image";
+        const iconImg =
+          (item.image_icons && baseUrl + item.image_icons) ||
+          "https://via.placeholder.com/48?text=Icon";
         return `
           <div class="col-lg-4 col-md-6 mb-4 topic-card" data-id="${item.id}">
             <div class="card shadow-lg border-0 position-relative overflow-hidden w-100" 
@@ -205,40 +205,40 @@ $(document).ready(function () {
   function renderCategoryCards(data) {
     cachedCategoryData = data;
     const categories = data.categories || [];
-    categories.forEach((c, i) => {
-      c.index = i;
-      c.color = categoryColor[i % categoryColor.length];
+    categories.forEach((category, index) => {
+      category.index = index;
+      category.color = categoryColor[index % categoryColor.length];
     });
 
     const html = categories
-      .map((c) => {
-        const mainInd = c.indicators?.[0];
+      .map((cat) => {
+        const mainInd = cat.indicators?.[0];
         const hasSparkline = mainInd && mainInd.annual_data?.length > 0;
-        const indicatorCount = c.indicators?.length || 0;
-        const extraHtml = c.description
-          ? `<p class="text-muted small mt-2">${c.description}</p>`
+        const indicatorCount = cat.indicators?.length || 0;
+        const extraHtml = cat.description
+          ? `<p class="text-muted small mt-2">${cat.description}</p>`
           : "";
         return `
         <div class="col-md-6 col-xl-3 mb-4">
           <div class="card shadow-sm h-100 category-card hover-card" data-index="${
-            c.index
-          }" data-color="${c.color}" 
+            cat.index
+          }" data-color="${cat.color}" 
                style="cursor:pointer; border-radius:1.25rem; overflow:hidden; position:relative; padding:1rem; transition: all 0.2s ease-in-out;">
             <div style="position:absolute; top:0; left:0; width:100%; height:4px; background-color:${colorHex(
-              c.color
+              cat.color
             )};"></div>
-            <h5 class="text-${c.color} mb-1 mt-1">${c.name_ENG}</h5>
+            <h5 class="text-${cat.color} mb-1 mt-1">${cat.name_ENG}</h5>
             <p class="text-muted mb-2" style="font-size:0.9rem;">${indicatorCount} Indicator${
           indicatorCount > 1 ? "s" : ""
         }</p>
             ${
               hasSparkline
-                ? `<div id="sparkline-${c.id}" style="height:50px;"></div>`
+                ? `<div id="sparkline-${cat.id}" style="height:50px;"></div>`
                 : ""
             }
             ${extraHtml}
             <small class="text-muted mt-auto d-block">Last updated: ${formatDate(
-              c.updated_at
+              cat.updated_at
             )}</small>
           </div>
         </div>`;
