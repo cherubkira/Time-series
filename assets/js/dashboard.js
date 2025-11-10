@@ -3,9 +3,39 @@ $(document).ready(function () {
   const baseUrl = "http://time-series.mopd.gov.et";
 
   let cachedTopicHtml = "";
-  let cachedCategoryData = null;
+  let cachedCategoryData = {};
   let cachedIndicatorDetails = {};
-  const CACHE_EXPIRY_MINUTES = 60; // Cache expires after 60 minutes
+
+  // prefetch
+  let preWarmData = {};
+
+  function preWarmCategories(topicId) {
+    if (preWarmData[topicId]) return;
+
+    preWarmData[topicId] = $.ajax({
+      url: `/local-api/topic-detail/${topicId}/`,
+      method: "GET",
+      success: function (data) {
+        const cacheKey = `topic_categories_${topicId}`;
+        setCachedData(cacheKey, data);
+      },
+    });
+  }
+
+  function getCachedData(key) {
+    const itemStr = localStorage.getItem(key);
+    if (!itemStr) return null;
+    try {
+      return JSON.parse(itemStr);
+    } catch {
+      localStorage.removeItem(key);
+      return null;
+    }
+  }
+
+  function setCachedData(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
 
   const categoryColor = [
     "primary",
@@ -16,7 +46,6 @@ $(document).ready(function () {
     "secondary",
   ];
 
-  // --- Helper functions ---
   function colorHex(colorName) {
     switch (colorName) {
       case "primary":
@@ -48,37 +77,10 @@ $(document).ready(function () {
       : [];
   }
 
-  // Retrieve data from local storage cache
-  function getCachedData(key, expiryMinutes) {
-    const itemStr = localStorage.getItem(key);
-    if (!itemStr) return null;
-
-    const item = JSON.parse(itemStr);
-    const now = new Date();
-
-    // Check if item is expired
-    if (now.getTime() > item.expiry) {
-      localStorage.removeItem(key);
-      return null;
-    }
-    return item.value;
-  }
-
-  //Set data in local storage cache
-  function setCachedData(key, value, expiryMinutes) {
-    const now = new Date();
-    const item = {
-      value: value,
-      expiry: now.getTime() + expiryMinutes * 60 * 1000,
-    };
-    localStorage.setItem(key, JSON.stringify(item));
-  }
-
   function initializeAllSparklines(indicators, color) {
     indicators.forEach((ind) => {
       const el = document.getElementById(`chart_${ind.id}`);
       if (el && ind.annual_data?.length) {
-        // Small delay ensures the element is rendered and ready for ApexCharts
         setTimeout(() => {
           new ApexCharts(el, {
             series: [
@@ -102,7 +104,7 @@ $(document).ready(function () {
     });
   }
 
-  // --- Core Function: Load Topics (Initial Load) ---
+  // load topics
   $.ajax({
     url: apiUrl,
     method: "GET",
@@ -130,7 +132,7 @@ $(document).ready(function () {
         return `
           <div class="col-lg-4 col-md-6 mb-4 topic-card" data-id="${item.id}">
             <div class="card shadow-lg border-0 position-relative overflow-hidden w-100" 
-                  style="border-radius:1.5rem; background:url('${imgBack}') center/cover no-repeat; min-height:220px;">
+                 style="border-radius:1.5rem; background:url('${imgBack}') center/cover no-repeat; min-height:220px;">
               <div class="position-absolute start-0 bottom-0 m-3 d-flex align-items-center">
                 <div class="bg-white d-flex align-items-center justify-content-center rounded-circle shadow" style="width:56px; height:56px;">
                   <img src="${iconImg}" alt="icon" style="width:32px; height:32px;">
@@ -155,6 +157,8 @@ $(document).ready(function () {
         '<div class="row gx-3 gy-4">' + cards.join("") + "</div>"
       );
       cachedTopicHtml = $("#topic-list").html();
+
+      response.data.forEach((t) => preWarmCategories(t.id));
     },
     error: () => {
       $("#topic-list").html(
@@ -163,26 +167,23 @@ $(document).ready(function () {
     },
   });
 
-  // --- Topic click handler (Uses Caching Logic) ---
+  //  Topic clicked
   $(document).on("click", ".topic-card", function () {
     const topicId = $(this).data("id");
     fetchAndDisplayCategories(topicId);
   });
 
-  // --- Function to fetch and display categories (with caching) ---
   function fetchAndDisplayCategories(topicId) {
     const cacheKey = `topic_categories_${topicId}`;
-    const cachedData = getCachedData(cacheKey, CACHE_EXPIRY_MINUTES);
+    const cachedData = getCachedData(cacheKey);
 
-    // 1. Attempt to load from cache
     if (cachedData) {
       renderCategoryCards(cachedData);
       return;
     }
 
-    // 2. Load from API if no cache or cache expired
     $("#topic-list").html(
-      "<p class='text-center mt-3 text-info'>Loading categories from API...</p>"
+      "<p class='text-center mt-3 text-info'>Loading categories...</p>"
     );
 
     $.ajax({
@@ -190,7 +191,7 @@ $(document).ready(function () {
       method: "GET",
       dataType: "json",
       success: function (data) {
-        setCachedData(cacheKey, data, CACHE_EXPIRY_MINUTES); // Cache the data
+        setCachedData(cacheKey, data);
         renderCategoryCards(data);
       },
       error: () => {
@@ -201,7 +202,6 @@ $(document).ready(function () {
     });
   }
 
-  //  Function to render category cards from data
   function renderCategoryCards(data) {
     cachedCategoryData = data;
     const categories = data.categories || [];
@@ -219,29 +219,29 @@ $(document).ready(function () {
           ? `<p class="text-muted small mt-2">${c.description}</p>`
           : "";
         return `
-          <div class="col-md-6 col-xl-3 mb-4">
-            <div class="card shadow-sm h-100 category-card hover-card" data-index="${
-              c.index
-            }" data-color="${c.color}" 
-              style="cursor:pointer; border-radius:1.25rem; overflow:hidden; position:relative; padding:1rem; transition: all 0.2s ease-in-out;">
-              <div style="position:absolute; top:0; left:0; width:100%; height:4px; background-color:${colorHex(
-                c.color
-              )};"></div>
-              <h5 class="text-${c.color} mb-1 mt-1">${c.name_ENG}</h5>
-              <p class="text-muted mb-2" style="font-size:0.9rem;">${indicatorCount} Indicator${
+        <div class="col-md-6 col-xl-3 mb-4">
+          <div class="card shadow-sm h-100 category-card hover-card" data-index="${
+            c.index
+          }" data-color="${c.color}" 
+               style="cursor:pointer; border-radius:1.25rem; overflow:hidden; position:relative; padding:1rem; transition: all 0.2s ease-in-out;">
+            <div style="position:absolute; top:0; left:0; width:100%; height:4px; background-color:${colorHex(
+              c.color
+            )};"></div>
+            <h5 class="text-${c.color} mb-1 mt-1">${c.name_ENG}</h5>
+            <p class="text-muted mb-2" style="font-size:0.9rem;">${indicatorCount} Indicator${
           indicatorCount > 1 ? "s" : ""
         }</p>
-              ${
-                hasSparkline
-                  ? `<div id="sparkline-${c.id}" style="height:50px;"></div>`
-                  : ""
-              }
-              ${extraHtml}
-              <small class="text-muted mt-auto d-block">Last updated: ${formatDate(
-                c.updated_at
-              )}</small>
-            </div>
-          </div>`;
+            ${
+              hasSparkline
+                ? `<div id="sparkline-${c.id}" style="height:50px;"></div>`
+                : ""
+            }
+            ${extraHtml}
+            <small class="text-muted mt-auto d-block">Last updated: ${formatDate(
+              c.updated_at
+            )}</small>
+          </div>
+        </div>`;
       })
       .join("");
 
@@ -251,14 +251,12 @@ $(document).ready(function () {
       <div id="annualTable" class="mt-5"></div>
     `);
 
-    // Render sparkline charts
+    // Render sparklines
     categories.forEach((c) => {
       const mainInd = c.indicators?.[0];
       if (mainInd?.annual_data?.length) {
         const chartData = mainInd.annual_data.map((d) => d.performance ?? 0);
         const years = mainInd.annual_data.map((d) => d.for_datapoint);
-
-        // Timeout to ensure the DOM is ready for chart rendering
         setTimeout(() => {
           new ApexCharts(document.querySelector(`#sparkline-${c.id}`), {
             series: [{ name: "Performance", data: chartData }],
@@ -291,7 +289,7 @@ $(document).ready(function () {
       }
     });
 
-    // Re-apply hover effects
+    // Hover effect
     $(".hover-card").hover(
       function () {
         $(this).css({
@@ -308,7 +306,7 @@ $(document).ready(function () {
     );
   }
 
-  //  Category click handler
+  // Category click
   $(document).on("click", ".category-card", function () {
     const index = $(this).data("index");
     const color = $(this).data("color");
@@ -317,12 +315,10 @@ $(document).ready(function () {
       displayCategoryIndicators(categoriesList[index], color);
   });
 
-  // Indicator Offcanvas handler
+  //Indicator click
   $(document).on("click", ".indicator-title", function () {
     const indicatorId = $(this).data("id");
     const offcanvasEl = document.getElementById("indicatorOffcanvas");
-
-    // create single reusable instance
     if (!offcanvasEl._bsInstance)
       offcanvasEl._bsInstance = new bootstrap.Offcanvas(offcanvasEl);
     const indicatorOffcanvasInstance = offcanvasEl._bsInstance;
@@ -330,13 +326,11 @@ $(document).ready(function () {
     const sidebar = document.querySelector(".pc-sidebar");
     const sidebarWidth = sidebar ? sidebar.offsetWidth : 0;
     const isCollapsed = sidebar && sidebar.classList.contains("collapsed");
-    if (isCollapsed || !sidebar) {
-      offcanvasEl.style.left = "0";
-      offcanvasEl.style.width = "100%";
-    } else {
-      offcanvasEl.style.left = sidebarWidth + "px";
-      offcanvasEl.style.width = `calc(100% - ${sidebarWidth}px)`;
-    }
+
+    offcanvasEl.style.left =
+      isCollapsed || !sidebar ? "0" : sidebarWidth + "px";
+    offcanvasEl.style.width =
+      isCollapsed || !sidebar ? "100%" : `calc(100% - ${sidebarWidth}px)`;
 
     $("#indicatorOffcanvas .offcanvas-body").html(`
       <div class="text-center py-5">
@@ -367,36 +361,29 @@ $(document).ready(function () {
       }
     };
 
-    //  ApexCharts to calculate dimensions correctly
-    function offcanvasShownHandler() {
+    offcanvasEl.addEventListener("shown.bs.offcanvas", function handler() {
       renderCharts();
-      offcanvasEl.removeEventListener(
-        "shown.bs.offcanvas",
-        offcanvasShownHandler
-      );
-    }
-    offcanvasEl.addEventListener("shown.bs.offcanvas", offcanvasShownHandler);
+      offcanvasEl.removeEventListener("shown.bs.offcanvas", handler);
+    });
   });
 
-  // --- Back buttons ---
+  //  Back Buttons
   $(document).on("click", "#back-btn", function () {
     $("#topic-list").html(cachedTopicHtml);
     $("#annualTable").empty();
-
     cachedCategoryData = null;
   });
+
   $(document).on("click", "#back-to-categories-btn", function () {
     $("#annualTable").empty();
     const categoryList = $("#category_list");
-    if (categoryList.length) {
+    if (categoryList.length)
       $("html, body").animate(
         { scrollTop: categoryList.offset().top - 80 },
         500
       );
-    }
   });
 
-  // --- Display indicators for category ---
   function displayCategoryIndicators(category, color) {
     $("#annualTable").html(`
       <button id="back-to-categories-btn" class="btn btn-outline-secondary mb-3">← Back to Categories</button>
@@ -404,16 +391,12 @@ $(document).ready(function () {
     `);
     if (category.indicators?.length > 0)
       initializeAllSparklines(category.indicators, color);
-    const annualTable = $("#annualTable");
-    if (annualTable.length) {
-      $("html, body").animate(
-        { scrollTop: annualTable.offset().top - 80 },
-        500
-      );
-    }
+    $("html, body").animate(
+      { scrollTop: $("#annualTable").offset().top - 80 },
+      500
+    );
   }
 
-  // --- Render indicators for category ---
   function renderIndicatorsForCategory(category, color) {
     let htmlContent = "";
     category.indicators?.forEach((ind) => {
@@ -429,16 +412,9 @@ $(document).ready(function () {
                 </div>
                 <div class="bg-body mt-3 rounded">
                   <div class="row align-items-center bg-light p-3">
-                    <div class="col-7 col-md-8">
-                      <div id="chart_${ind.id}" tabindex="0"></div>
-                    </div>
+                    <div class="col-7 col-md-8"><div id="chart_${ind.id}" tabindex="0"></div></div>
                     <div class="col-3 text-center">
-                      <h4>
-                        <span class="badge bg-${color}">
-                          ${latest.for_datapoint}<hr style="margin:3px 0; border-top:1px solid rgba(255,255,255,0.5);">
-                          ${latest.performance}
-                        </span>
-                      </h4>
+                      <h4><span class="badge bg-${color}">${latest.for_datapoint}<hr style="margin:3px 0; border-top:1px solid rgba(255,255,255,0.5);">${latest.performance}</span></h4>
                     </div>
                   </div>
                 </div>
@@ -450,7 +426,6 @@ $(document).ready(function () {
     return `<h4 class="fw-bold text-${color} text-center mb-4">${category.name_ENG}</h4><div class="row m-3">${htmlContent}</div>`;
   }
 
-  // --- Optimized indicator detail renderer ---
   function renderIndicatorDetailsOptimized(indicator, id) {
     let html = `<div class="container-fluid">
       <h5 class="fw-bold mb-3 text-primary">${indicator.title_ENG}</h5>
@@ -459,7 +434,7 @@ $(document).ready(function () {
       }</p>
       <ul class="list-group list-group-flush mt-3 mb-3">
         <li class="list-group-item"><strong>Category:</strong> ${indicator.for_category
-          .map((detail) => (typeof detail === "object" ? detail.name_ENG : c))
+          .map((item) => (typeof item === "object" ? item.name_ENG : item))
           .join(", ")}</li>
         <li class="list-group-item"><strong>Frequency:</strong> ${
           indicator.frequency
@@ -499,7 +474,6 @@ $(document).ready(function () {
     html += `</div>`;
     $("#indicatorOffcanvas .offcanvas-body").html(html);
 
-    // Main chart
     if (indicator.annual_data?.length) {
       new ApexCharts(document.querySelector(`#indicator-detail-chart-${id}`), {
         series: [
@@ -515,7 +489,6 @@ $(document).ready(function () {
       }).render();
     }
 
-    // Child charts
     indicator.children?.forEach((child) => {
       if (child.annual_data?.length) {
         new ApexCharts(document.querySelector(`#child-chart-${child.id}`), {
@@ -534,7 +507,7 @@ $(document).ready(function () {
     });
   }
 
-  // --- Global search filter with debounce (optional later) ---
+  //search or filter
   $(document).on("input", "#global-search", function () {
     const q = $(this).val().toLowerCase().trim();
     if (!q) {
